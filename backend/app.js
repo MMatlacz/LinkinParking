@@ -1,28 +1,60 @@
-const Readline = require('@serialport/parser-readline');
-var SerialPort = require('serialport');
-var serial_port = new SerialPort('/dev/tty.usbmodem00_01', {
-  baudRate: 57600
-});
-const parser = new Readline();
-serial_port.pipe(parser);
-parser.on('data', function (data) {
-    last_message = data
-});
+const express = require('express');
+const eosjs = require('eosjs');
+const fetch = require('node-fetch');
+var bodyParser = require('body-parser');
 
+var occupied = 'OCCUPIED';
+var free = 'FREE';
+var reserved = 'RESERVED';
 
-var last_message = null;
-
-const http = require('http');
-
-const hostname = '127.0.0.1';
+var app = express();
 const port = 3000;
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
-const server = http.createServer((req, res) => {
-  res.statusCode = 200;
-  res.setHeader('Content-Type', 'text/plain');
-  res.end(JSON.stringify({'last_message': last_message}));
+
+let db = {
+  parking_spots: {
+    1: {
+        status: free,
+        position: {}
+    },
+    2: {
+        status: occupied,
+        position: {}
+    }
+  }
+};
+
+app.get('/status', function (req, res) {
+    res.send(JSON.stringify(db.parking_spots))
+});
+app.post('/take', function(req, res) {
+    console.log('Incoming take request');
+    let spot_id = req.body['device_id'];
+    let spot = db.parking_spots[spot_id];
+
+    if (spot.status === free){
+        spot.status = occupied;
+        res.send('OK')
+    }
 });
 
-server.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
+app.post('/free', function(req, res) {
+    console.log('Incoming free request');
+    let spot_id = req.body['device_id'];
+    let spot = db.parking_spots[spot_id];
+
+    if (spot.status === occupied) {
+        spot.status = free;
+        res.send('OK')
+    }
 });
+
+app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+
+// const defaultPrivateKey = "5JtUScZK2XEp3g9gh7F8bwtPTRAkASmNrrftmx4AxDKD5K4zDnr"; // useraaaaaaaa
+// const signatureProvider = new eosjs.JsSignatureProvider([defaultPrivateKey]);
+//
+// const rpc = new eosjs.JsonRpc('http://127.0.0.1:8000', { fetch });
+// const api = new eosjs.Api({ rpc, signatureProvider, textDecoder: new TextDecoder(), textEncoder: new TextEncoder() });
