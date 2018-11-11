@@ -1,5 +1,7 @@
 <html>
 <head>
+    <link rel="shortcut icon" type="image/png" href="/static/logo.png"/>
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
           integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
           crossorigin=""/>
@@ -19,18 +21,32 @@
 
     <link rel="stylesheet" href="vex.css"/>
     <link rel="stylesheet" href="vex-theme-os.css"/>
+
     <style>
         #mapid {
+            height: 100%;
+        }
+
+        #splash {
+            width: 100%;
             height: 100%;
         }
     </style>
     <script src="leaflet-providers.js"></script>
 </head>
 <body style="padding: 0; margin: 0;">
+<img src="splashscreens/iphone5_splash.png" id="splash">
 <div>
     <div id="mapid"></div>
 </div>
 
 </body>
 <script src="js/main.js"></script>
+<script>
+    $('#mapid').hide();
+    setTimeout(function () {
+        $('#splash').remove();
+        $('#mapid').show();
+    }, 5000);
+</script>
 </html>

@@ -14,7 +14,8 @@ function onParkingClick(event) {
         swal({
             title: 'Parking spot information',
             text: 'Parking spot number ' + label + ' costs $' + price + ' per/hour.',
-            icon: 'info',
+            // icon: 'info',
+            icon: "../static/logo.png",
             buttons: true,
             dangerMode: false,
         }).then((accepts) => {
