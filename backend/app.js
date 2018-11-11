@@ -1,6 +1,4 @@
 const express = require('express');
-const eosjs = require('eosjs');
-const fetch = require('node-fetch');
 const axios = require('axios');
 var bodyParser = require('body-parser');
 

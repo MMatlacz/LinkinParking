@@ -3,18 +3,17 @@ const SerialPort = require('serialport');
 const axios = require('axios');
 const express = require('express');
 
-const port = 3001;
-var app = express();
+const { Api, JsonRpc, RpcError, JsSignatureProvider } = require('eosjs');
+const fetch = require('node-fetch');                            // node only; not needed in browsers
+const { TextDecoder, TextEncoder } = require('text-encoding');
 
-var device_id = 1;
+// Id of the device will be automatically generated
+var parking_id = 1;
 
-var initial = 'INITIAL';
 var occupied = 'OCCUPIED';
 var free = 'FREE';
 var reserved = 'RESERVED';
-var sensor_status = initial;
-
-var sending = false;
+var sensor_status = free;
 
 var status_mapping = {
     '1': occupied,
@@ -22,47 +21,91 @@ var status_mapping = {
     '2': reserved
 };
 
+const endpoint = "http://127.0.0.1:8888";
+let account = 'useraaaaaaac';
+let privateKey = '5K2jun7wohStgiCDSDYjk3eteRH1KaxUQsZTEmTGPH4GS9vVFb7';
+
+const rpc = new JsonRpc(endpoint, { fetch });
+const signatureProvider = new JsSignatureProvider([privateKey]);
+const api = new Api({ rpc, signatureProvider, textDecoder: new TextDecoder(), textEncoder: new TextEncoder() });
+
+let actionData = {};
 
 function state_key(from, to){
     return from + '->' + to
 }
 
-function taken(device_id) {
-    // server is checking if place can be taken
-    axios.post(
-        'http://127.0.0.1:3000/take',
-        {'device_id': device_id}
-    ).then(function (response) {
-        sending = false;
-        console.info('Taken place');
-    }).catch(function (error) {sending = false; console.error(error);});
-
+async function getParkings() {
+	console.log('sgit');
+	let result2 = await rpc.get_table_rows({
+      "json": true,
+      "code": "notechainacc",   // contract who owns the table
+      "scope": "notechainacc",  // scope of the table
+      "table": "parkstruct",    // name of the table as specified by the contract abi
+      "limit": 100,
+    });
+	console.log(result2);
+	return result2.rows;
 }
 
-function fried(device_id) {
-    // server is checking if place can be taken
-    axios.post('http://127.0.0.1:3000/free', {'device_id': device_id})
-        .then(function (response) {
-            sending = false;
-            console.info('Fried place')
-        })
-        .catch(function (error) {sending = false; console.error(error);});
+async function takeParking(parking_id, account) {
+	let actionName = "take";
+	actionData = {
+		user: 		account,
+		id:			parking_id
+	};
+	console.log(actionData);
 
+	let result = await api.transact({
+		actions: [{
+		  account: "notechainacc",
+		  name: actionName,
+		  authorization: [{
+			actor: account,
+			permission: 'active',
+		  }],
+		  data: actionData,
+		}]
+		}, {
+		blocksBehind: 3,
+		expireSeconds: 30,
+	});
+
+	console.log(result);
 }
 
-function reserve(device_id) {
-    console.info('Spot was reserved by backend');
+async function releaseParking(parking_id, account) {
+	let actionName = "release";
+	actionData = {
+		user: 		account,
+		id:			parking_id
+	};
+	console.log(actionData);
+
+	let result = await api.transact({
+		actions: [{
+		  account: "notechainacc",
+		  name: actionName,
+		  authorization: [{
+			actor: account,
+			permission: 'active',
+		  }],
+		  data: actionData,
+		}]
+		}, {
+		blocksBehind: 3,
+		expireSeconds: 30,
+	});
+
+	console.log(result);
 }
 
 
 var state_machine = {
-    [state_key(free, occupied)]: taken,
-    [state_key(occupied, free)]: fried,
-    [state_key(reserved, occupied)]: taken,
-    [state_key(free, reserved)]: reserve,
-    [state_key(initial, free)]: fried,
-    [state_key(initial, occupied)]: taken,
-    [state_key(initial, reserved)]: reserve,
+    [state_key(free, occupied)]: takeParking,
+    [state_key(occupied, free)]: releaseParking,
+    [state_key(reserved, occupied)]: takeParking,
+    [state_key(free, reserved)]: console.log,
 };
 
 
@@ -79,10 +122,14 @@ parser.on('data', function (data) {
 
     if (new_status !== sensor_status){
         let state_change_fun = state_machine[state_key(sensor_status, new_status)];
-        state_change_fun(device_id);
+        state_change_fun(parking_id, account);
         sensor_status = new_status;
     }
 });
+
+
+const port = 3001;
+var app = express();
 
 app.post('/reserve', function(req, res) {
     serial_port.write('reserve', function(err) {

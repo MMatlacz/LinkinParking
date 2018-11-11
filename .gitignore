@@ -63,3 +63,25 @@ typings/
 .next
 
 .idea
+
+# testing
+/coverage
+
+# production
+frontend/build
+
+#compile contract files
+**/*.abi
+**/*.wasm
+**/*.wast
+
+#blockchain data
+**/data/*
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.deb
