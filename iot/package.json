@@ -1,18 +1,17 @@
 {
-  "name": "backend",
+  "name": "iot",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "eosjs": "^20.0.0-beta2",
+    "axios": "^0.18.0",
+    "body-parser": "^1.18.3",
     "express": "^4.16.4",
-    "node": "^11.0.0",
-    "node-fetch": "^2.2.1",
     "serialport": "^7.0.2"
   }
 }
