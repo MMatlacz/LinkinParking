@@ -1,7 +1,9 @@
 const express = require('express');
 const eosjs = require('eosjs');
 const fetch = require('node-fetch');
+const axios = require('axios');
 var bodyParser = require('body-parser');
+
 
 var occupied = 'OCCUPIED';
 var free = 'FREE';
@@ -17,10 +19,12 @@ let db = {
   parking_spots: {
     1: {
         status: free,
+        device_address: 'http://localhost:3001',
         position: {}
     },
     2: {
         status: occupied,
+        device_address: null,
         position: {}
     }
   }
@@ -38,6 +42,30 @@ app.post('/take', function(req, res) {
         spot.status = occupied;
         res.send('OK')
     }
+
+    if (spot.status === reserved) {
+        // TODO: Check if correct user took the place
+        spot.status = occupied;
+        res.send('OK')
+    }
+
+});
+app.post('/reserve', function (req, res) {
+    console.log('Incoming reserve request');
+    let spot_id = req.body['device_id'];
+    let spot = db.parking_spots[spot_id];
+
+    if (spot.status === free) {
+        spot.status = reserved;
+        axios.post(spot.device_address + '/reserve').then(function (response) {
+            console.log('Reserved place');
+            res.send('OK')
+        }).catch(function (error) {console.log(error.toString());});
+    }
+    else {
+        res.statusMessage = "Parking park cannot be reserved";
+        res.status(400).end()
+    }
 });
 
 app.post('/free', function(req, res) {
@@ -51,7 +79,7 @@ app.post('/free', function(req, res) {
     }
 });
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+app.listen(port, () => console.log(`Backend app listening on port ${port}!`));
 
 // const defaultPrivateKey = "5JtUScZK2XEp3g9gh7F8bwtPTRAkASmNrrftmx4AxDKD5K4zDnr"; // useraaaaaaaa
 // const signatureProvider = new eosjs.JsSignatureProvider([defaultPrivateKey]);
