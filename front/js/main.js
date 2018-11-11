@@ -24,6 +24,23 @@ function onParkingClick(event) {
             dangerMode: false,
         }).then((accepts) => {
             if (accepts) {
+                let settings = {
+                    "async": true,
+                    "crossDomain": true,
+                    "url": "http://localhost:3002/reservation",
+                    "method": "POST",
+                    "headers": {
+                        "content-type": "application/json",
+                        "cache-control": "no-cache",
+                        "postman-token": "8a1b69db-811f-cdf5-df62-38ad7f31ec36"
+                    },
+                    "processData": false,
+                    "data": "{\n\t\"parkingID\": " + label + "\n}"
+                };
+
+                $.ajax(settings).done(function (response) {
+                    console.log(response);
+                });
                 swal('The spot is all yours!', {
                     icon: 'success',
                 })
@@ -43,7 +60,6 @@ function onParkingClick(event) {
 }
 
 function addParking(parking) {
-    const price = parking['price'];
     let position = parking['position'].split(',');
     let coords = [];
     for (let i = 0; i < position.length; i += 2) {
@@ -71,7 +87,7 @@ function addParking(parking) {
         fillColor,
         color: fillColor,
         label: parking['id'],
-        price: parking['price'],
+        price: parseInt(parking['price']),
         available,
     });
     polygon.on('click', onParkingClick);
@@ -105,12 +121,12 @@ function putParkingsOnMap(data) {
     for (let i = 0; i < parks.length; i++) {
         let parking_id = parks[i]['id'];
         let retrieved = parkings[parking_id];
-        if(retrieved === undefined)
+        if (retrieved === undefined)
             addParking(parks[i]);
         else
             updateParking(parks[i]);
     }
-};
+}
 
 const settings = {
     "async": true,
