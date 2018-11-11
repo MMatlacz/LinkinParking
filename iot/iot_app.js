@@ -6,7 +6,7 @@ const fetch = require('node-fetch');                            // node only; no
 const { TextDecoder, TextEncoder } = require('text-encoding');
 
 // Id of the device will be automatically generated
-const parking_id = 6;
+const parking_id = 0;
 
 const occupied = 'OCCUPIED';
 const free = 'FREE';
@@ -101,7 +101,7 @@ const parser = new Readline();
 serial_port.pipe(parser);
 
 parser.on('data', function (data) {
-    console.info(data);
+    // console.info(data);
     data = data.trim();
     let new_status = status_mapping[data];
 

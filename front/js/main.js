@@ -1,8 +1,3 @@
-function randomIntFromInterval(min, max) // min and max included
-{
-    return Math.floor(Math.random() * (max - min + 1) + min);
-}
-
 const map = L.map('mapid', {zoomControl: false}).setView([37.8047488, -122.4214938], 20)
 L.tileLayer.provider('HERE.terrainDay', {
     app_id: 'Lw639bgCPrd9dTnBfJsF',
@@ -27,7 +22,7 @@ function onParkingClick(event) {
                 let settings = {
                     "async": true,
                     "crossDomain": true,
-                    "url": "http://localhost:3002/reservation",
+                    "url": "http://10.7.0.240:3002/reservation",
                     "method": "POST",
                     "headers": {
                         "content-type": "application/json",
@@ -131,7 +126,7 @@ function putParkingsOnMap(data) {
 const settings = {
     "async": true,
     "crossDomain": true,
-    "url": "http://localhost:3002/parkings",
+    "url": "http://10.7.0.240:3002/parkings",
     "method": "GET",
     "headers": {
         "cache-control": "no-cache",

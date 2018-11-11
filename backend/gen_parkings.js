@@ -119,8 +119,8 @@ let actionData = {};
 // define actionName and action according to event type
 async function addParking(latlng, price) {
 	let actionName = "add";
-	var latlng_str = '';
-	for(var i in latlng)
+    let latlng_str = '';
+    for(const i in latlng)
 		latlng_str += latlng[i][0] + "," + latlng[i][1] + ",";
 	latlng_str = latlng_str.substring(0, latlng_str.length - 1);
 	actionData = {
@@ -200,6 +200,11 @@ async function releaseParking(parking_id) {
 	console.log(result);
 }
 
+function randomIntFromInterval(min, max) // min and max included
+{
+    return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
 async function getParkings() {
 	console.log('sgit');
 	let result2 = await rpc.get_table_rows({
@@ -215,7 +220,7 @@ async function getParkings() {
 
 function addAllParkings() {
 	for(var p in parkings) {
-		addParking(parkings[p], 1);
+		addParking(parkings[p], randomIntFromInterval(20, 50));
 	}
 }
 
@@ -272,7 +277,8 @@ async function unreserveParking(parking_id) {
 }
 
 // reserveParking(1);
-// unreserveParking(1);
+// unreserveParking(14);
+// unreserveParking(4);
 addAllParkings();
 // addParking(parkings[0], 1);
 // takeParking(1)

@@ -3,7 +3,7 @@ const axios = require('axios');
 const { Api, JsonRpc, JsSignatureProvider } = require('eosjs');
 const bodyParser = require('body-parser');
 const fetch = require('node-fetch');
-const cors = require('cors')
+const cors = require('cors');
 
 const app = express();
 const port = 3002;
@@ -54,5 +54,26 @@ app.post('/reservation', function (req, res) {
     });
 });
 
+app.post('/unreserve', function (req, res) {
+    let parkingID = req.body.parkingID;
+    api.transact({
+        actions: [{
+            account: "parkchainacc",
+            name: "unreserve",
+            authorization: [{
+                actor: account,
+                permission: 'active',
+            }],
+            data: {
+                user: account,
+                id: parkingID
+            },
+        }]
+    }, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+    });
+});
 
-app.listen(port, () => console.log(`Backend app listening on port ${port}!`));
+
+app.listen(port, '0.0.0.0', () => console.log(`Backend app listening on port ${port}!`));
