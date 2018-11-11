@@ -1319,6 +1319,10 @@ kind-of@^6.0.0, kind-of@^6.0.2:
   version "6.0.2"
   resolved "https://registry.yarnpkg.com/kind-of/-/kind-of-6.0.2.tgz#01146b36a6218e64e58f3a8d66de5d7fc6f6d051"
 
+leaflet-label@^0.2.1-0:
+  version "0.2.1-0"
+  resolved "https://registry.yarnpkg.com/leaflet-label/-/leaflet-label-0.2.1-0.tgz#b91a678a4d78ac4c47cb230d3926254fd2a7e612"
+
 lodash@^4.17.4:
   version "4.17.11"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.11.tgz#b39ea6229ef607ecd89e2c8df12536891cac9b8d"
