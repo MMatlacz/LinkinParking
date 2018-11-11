@@ -9,98 +9,106 @@ L.tileLayer.provider('HERE.terrainDay', {
     app_code: 'Lyhc0GQGSkaTQtsa0WxyKw'
 }).addTo(map);
 
-let polygons = {};
+let parkings = {};
 
-const putParkingsOnMap = (parkings) => {
-    let polygonPoints = parkings['rows'];
-    let fillColor;
-    let available;
-    for (let poly = 0; poly < polygonPoints.length; poly++) {
-        let onPolyClick = function (event) {
-            const label = event.target.options.label;
-            const price = event.target.options.price;
-            const available = event.target.options.available;
-            if (available) {
-                swal({
-                    title: 'Parking spot information',
-                    text: 'Parking spot number ' + label + ' costs $' + price + ' per/hour.',
-                    icon: 'info',
-                    buttons: true,
-                    dangerMode: false,
-                }).then((accepts) => {
-                    if (accepts) {
-                        swal('The spot is all yours!', {
-                            icon: 'success',
-                        })
-                    }
-                })
-            } else {
-                swal({
-                    title: 'Parking spot information',
-                    text: 'Parking spot number ' + label + ' is not open',
-                    icon: 'warning',
-                    button: {
-                        text: 'Close',
-                    },
-                    dangerMode: false,
+function onParkingClick(event) {
+    const label = event.target.options.label;
+    const price = event.target.options.price;
+    const available = event.target.options.available;
+    if (available) {
+        swal({
+            title: 'Parking spot information',
+            text: 'Parking spot number ' + label + ' costs $' + price + ' per/hour.',
+            icon: 'info',
+            buttons: true,
+            dangerMode: false,
+        }).then((accepts) => {
+            if (accepts) {
+                swal('The spot is all yours!', {
+                    icon: 'success',
                 })
             }
-        };
-        const price = randomIntFromInterval(20, 50);
-        let parking = polygonPoints[poly];
-        let position = parking['position'].split(',');
-        let coords = [];
-        for (let i = 0; i < position.length; i += 2) {
-            coords.push([parseFloat(position[i + 1]), parseFloat(position[i])])
-        }
+        })
+    } else {
+        swal({
+            title: 'Parking spot information',
+            text: 'Parking spot number ' + label + ' is not open',
+            icon: 'warning',
+            button: {
+                text: 'Close',
+            },
+            dangerMode: false,
+        })
+    }
+}
 
-        const isReserved = parking['reserved'];
-        const isInUse = parking['used_from'];
+function addParking(parking) {
+    const price = parking['price'];
+    let position = parking['position'].split(',');
+    let coords = [];
+    for (let i = 0; i < position.length; i += 2) {
+        coords.push([parseFloat(position[i + 1]), parseFloat(position[i])])
+    }
 
-        available = !isReserved & !isInUse;
+    const isReserved = parking['reserved'];
+    const isInUse = parking['used_from'];
 
-        if (available) {
-            fillColor = 'green'
-        } else if (isInUse) {
-            fillColor = 'red'
-        } else if (isReserved) {
-            fillColor = 'orange'
-        }
+    let available = !isReserved & !isInUse;
 
-        if (!available) {
-            console.log(parking);
-        }
+    let fillColor = 'green';
+    if (isInUse) {
+        fillColor = 'red';
+    } else if (isReserved) {
+        fillColor = 'orange';
+    }
+
+    if (!available) {
+        console.log(parking);
+    }
 
 
-        const polygon = L.polygon(coords, {
-            fillColor,
-            color: fillColor,
-            label: parking['id'],
-            price: parking['price'],
-            available,
-        });
-        polygon.on('click', onPolyClick);
+    const polygon = L.polygon(coords, {
+        fillColor,
+        color: fillColor,
+        label: parking['id'],
+        price: parking['price'],
+        available,
+    });
+    polygon.on('click', onParkingClick);
+    polygon['options']['color'] = fillColor;
+    polygon['options']['fillColor'] = fillColor;
+    polygon.addTo(map);
+    parkings[parking['id']] = polygon;
+}
 
-        let retrieved = polygons[parking['id']];
-        if (typeof retrieved !== 'undefined') {
-            polygons[parking['id']].removeFrom(map);
-            if (available) {
-                polygons[parking['id']]['options']['color'] = 'green';
-                polygons[parking['id']]['options']['fillColor'] = 'green';
-            } else if(isInUse){
-                polygons[parking['id']]['options']['color'] = 'red';
-                polygons[parking['id']]['options']['fillColor'] = 'red';
-            } else {
-                polygons[parking['id']]['options']['color'] = 'orange';
-                polygons[parking['id']]['options']['fillColor'] = 'orange';
-            }
-            polygons[parking['id']]['options']['available'] = available;
-            polygons[parking['id']].addTo(map);
-        } else {
-            console.log('Adding');
-            polygons[parking['id']] = polygon;
-            polygons[parking['id']].addTo(map);
-        }
+function updateParking(parking) {
+    const isReserved = parking['reserved'];
+    const isInUse = parking['used_from'];
+
+    let available = !isReserved & !isInUse;
+    let fillColor = 'green';
+    if (isInUse) {
+        fillColor = 'red';
+    } else if (isReserved) {
+        fillColor = 'orange';
+    }
+
+    parkings[parking['id']]['options']['color'] = fillColor;
+    parkings[parking['id']]['options']['fillColor'] = fillColor;
+    parkings[parking['id']]['options']['available'] = available;
+    map.removeLayer(parkings[parking['id']]);
+    parkings[parking['id']].addTo(map);
+}
+
+function putParkingsOnMap(data) {
+    let parks = data['rows'];
+    for (let i = 0; i < parks.length; i++) {
+        let parking_id = parks[i]['id'];
+        let retrieved = parkings[parking_id];
+        if(retrieved === undefined)
+            addParking(parks[i]);
+        else
+            updateParking(parks[i]);
     }
 };
 
