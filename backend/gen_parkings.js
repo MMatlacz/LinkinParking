@@ -132,7 +132,7 @@ async function addParking(latlng, price) {
 
 	let result = await api.transact({
 		actions: [{
-		  account: "notechainacc",
+		  account: "parkchainacc",
 		  name: actionName,
 		  authorization: [{
 			actor: account,
@@ -158,7 +158,7 @@ async function takeParking(parking_id) {
 
 	let result = await api.transact({
 		actions: [{
-		  account: "notechainacc",
+		  account: "parkchainacc",
 		  name: actionName,
 		  authorization: [{
 			actor: account,
@@ -184,7 +184,7 @@ async function releaseParking(parking_id) {
 
 	let result = await api.transact({
 		actions: [{
-		  account: "notechainacc",
+		  account: "parkchainacc",
 		  name: actionName,
 		  authorization: [{
 			actor: account,
@@ -204,8 +204,8 @@ async function getParkings() {
 	console.log('sgit');
 	let result2 = await rpc.get_table_rows({
       "json": true,
-      "code": "notechainacc",   // contract who owns the table
-      "scope": "notechainacc",  // scope of the table
+      "code": "parkchainacc",   // contract who owns the table
+      "scope": "parkchainacc",  // scope of the table
       "table": "parkstruct",    // name of the table as specified by the contract abi
       "limit": 100,
     });
@@ -219,8 +219,62 @@ function addAllParkings() {
 	}
 }
 
-// addAllParkings();
+async function reserveParking(parking_id) {
+	let actionName = "reserve";
+	actionData = {
+		user: 		account,
+		id:			parking_id
+	};
+	console.log(actionData);
+
+	let result = await api.transact({
+		actions: [{
+		  account: "parkchainacc",
+		  name: actionName,
+		  authorization: [{
+			actor: account,
+			permission: 'active',
+		  }],
+		  data: actionData,
+		}]
+		}, {
+		blocksBehind: 3,
+		expireSeconds: 30,
+	});
+
+	console.log(result);
+}
+
+async function unreserveParking(parking_id) {
+	let actionName = "unreserve";
+	actionData = {
+		user: 		account,
+		id:			parking_id
+	};
+	console.log(actionData);
+
+	let result = await api.transact({
+		actions: [{
+		  account: "parkchainacc",
+		  name: actionName,
+		  authorization: [{
+			actor: account,
+			permission: 'active',
+		  }],
+		  data: actionData,
+		}]
+		}, {
+		blocksBehind: 3,
+		expireSeconds: 30,
+	});
+
+	console.log(result);
+}
+
+// reserveParking(1);
+// unreserveParking(1);
+addAllParkings();
 // addParking(parkings[0], 1);
-// takeParking(2)
-// releaseParking(1)
-getParkings();
+// takeParking(1)
+// releaseParking(2);
+//  getParkings();

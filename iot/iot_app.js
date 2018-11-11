@@ -1,21 +1,19 @@
 const Readline = require('@serialport/parser-readline');
 const SerialPort = require('serialport');
-const axios = require('axios');
-const express = require('express');
 
-const { Api, JsonRpc, RpcError, JsSignatureProvider } = require('eosjs');
+const { Api, JsonRpc, JsSignatureProvider } = require('eosjs');
 const fetch = require('node-fetch');                            // node only; not needed in browsers
 const { TextDecoder, TextEncoder } = require('text-encoding');
 
 // Id of the device will be automatically generated
-var parking_id = 1;
+const parking_id = 6;
 
-var occupied = 'OCCUPIED';
-var free = 'FREE';
-var reserved = 'RESERVED';
-var sensor_status = free;
+const occupied = 'OCCUPIED';
+const free = 'FREE';
+const reserved = 'RESERVED';
+let sensor_status = free;
 
-var status_mapping = {
+const status_mapping = {
     '1': occupied,
     '0': free,
     '2': reserved
@@ -35,19 +33,6 @@ function state_key(from, to){
     return from + '->' + to
 }
 
-async function getParkings() {
-	console.log('sgit');
-	let result2 = await rpc.get_table_rows({
-      "json": true,
-      "code": "notechainacc",   // contract who owns the table
-      "scope": "notechainacc",  // scope of the table
-      "table": "parkstruct",    // name of the table as specified by the contract abi
-      "limit": 100,
-    });
-	console.log(result2);
-	return result2.rows;
-}
-
 async function takeParking(parking_id, account) {
 	let actionName = "take";
 	actionData = {
@@ -58,7 +43,7 @@ async function takeParking(parking_id, account) {
 
 	let result = await api.transact({
 		actions: [{
-		  account: "notechainacc",
+		  account: "parkchainacc",
 		  name: actionName,
 		  authorization: [{
 			actor: account,
@@ -84,7 +69,7 @@ async function releaseParking(parking_id, account) {
 
 	let result = await api.transact({
 		actions: [{
-		  account: "notechainacc",
+		  account: "parkchainacc",
 		  name: actionName,
 		  authorization: [{
 			actor: account,
@@ -101,7 +86,7 @@ async function releaseParking(parking_id, account) {
 }
 
 
-var state_machine = {
+const state_machine = {
     [state_key(free, occupied)]: takeParking,
     [state_key(occupied, free)]: releaseParking,
     [state_key(reserved, occupied)]: takeParking,
@@ -109,8 +94,8 @@ var state_machine = {
 };
 
 
-var serial_port = new SerialPort('/dev/tty.usbmodem00_01', {
-  baudRate: 2*57600
+const serial_port = new SerialPort('/dev/tty.usbmodem00_01', {
+    baudRate: 2 * 57600
 });
 const parser = new Readline();
 serial_port.pipe(parser);
@@ -127,22 +112,39 @@ parser.on('data', function (data) {
     }
 });
 
+async function checkReservationStatus() {
+	let table = await rpc.get_table_rows({
+      "json": true,
+      "code": "parkchainacc",   // contract who owns the table
+      "scope": "parkchainacc",  // scope of the table
+      "table": "parkstruct",    // name of the table as specified by the contract abi
+      "limit": 100,
+    });
+	for (let i=0; i < table.rows.length; i++){
+		let parking = table.rows[i];
+		if (parking.id === parking_id && parking.reserved && sensor_status !== reserved){
+			setReservation()
+		}
+		else if (parking.id === parking_id && !parking.reserved && sensor_status === reserved) {
+			unsetReservation()
+		}
+	}
+}
 
-const port = 3001;
-var app = express();
-
-app.post('/reserve', function(req, res) {
-    serial_port.write('reserve', function(err) {
-      if (err){
-          res.statusMessage = 'Couldn reserv parking spot';
-          res.status(400).end();
-          console.error('Error on write: ', err.message);
-          return
-      }
-
-      res.send('OK');
+function setReservation(){
+	serial_port.write('reserve', function(err) {
+      if (err)
+      	return console.error('Error on write: ', err.message);
       console.info('message written');
     });
-});
+}
 
-app.listen(port, () => console.log(`Iot controller app listening on port ${port}!`));
+function unsetReservation(){
+	serial_port.write('0', function(err) {
+      if (err)
+      	return console.error('Error on write: ', err.message);
+      console.info('message written');
+    });
+}
+
+setInterval(checkReservationStatus,1000);
