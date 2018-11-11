@@ -6,6 +6,13 @@
 	<script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
 	        integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
 	        crossorigin=""></script>
+
+	<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+	<script src="vex.combined.js"></script>
+	<script>vex.defaultOptions.className = 'vex-theme-os'</script>
+	<link rel="stylesheet" href="vex.css"/>
+	<link rel="stylesheet" href="vex-theme-os.css"/>
 	<style>
 		#mapid {
 			height: 100%;
@@ -16,7 +23,7 @@
 <body style="padding: 0; margin: 0;">
 	<div id="mapid"></div>
 	<script>
-      const map = L.map('mapid').setView([37.8047488, -122.4214938], 20)
+      const map = L.map('mapid', {zoomControl: false}).setView([37.8047488, -122.4214938], 20)
       L.tileLayer.provider('HERE.terrainDay', {
         app_id: 'Lw639bgCPrd9dTnBfJsF',
         app_code: 'Lyhc0GQGSkaTQtsa0WxyKw'
@@ -129,8 +136,56 @@
 
       console.log(polygonPoints.length)
 
-      for (let poly in polygonPoints)
-        L.polygon(polygonPoints[poly]).addTo(map)
+      for (let poly = 0; poly < polygonPoints.length; poly++) {
+        if (poly === 2) {
+          fillColor = 'red'
+          available = false
+        } else {
+          fillColor = 'green'
+          available = true
+        }
+        let onPolyClick = function (event) {
+          const label = event.target.options.label
+          const price = event.target.options.price
+          const available = event.target.options.available
+          if (available) {
+            swal({
+              title: 'Parking spot information',
+              text: 'Parking spot number ' + label + ' costs $' + price + ' per/hour.',
+              icon: 'info',
+              buttons: true,
+              dangerMode: false,
+            })
+              .then((accepts) => {
+                if (accepts) {
+                  swal('The spot is all yours!', {
+                    icon: 'success',
+                  })
+                }
+              })
+          } else {
+            swal({
+              title: 'Parking spot information',
+              text: 'Parking spot number ' + label + ' is not open',
+              icon: 'warning',
+              button: {
+                text: 'Close',
+              },
+              dangerMode: false,
+            })
+          }
+        }
+        const polygon = L.polygon(polygonPoints[poly], {
+          fillColor,
+          color: fillColor,
+          label: poly,
+          price: 20,
+          available,
+        })
+        polygon.on('click', onPolyClick)
+        polygon.addTo(map)
+        console.log(polygon)
+      }
 	</script>
 </body>
 </html>

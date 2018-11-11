@@ -1,0 +1,24 @@
+{
+  "dependencies": {
+    "eosjs": "^20.0.0-beta2",
+    "sweetalert": "^2.1.2",
+    "vex-dialog": "^1.1.0"
+  },
+  "name": "frontend",
+  "version": "1.0.0",
+  "main": "index.html",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-preset-es2015": "^6.24.1",
+    "http-server": "^0.11.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "babel": "babel --presets es2015 js/main.js -o build/main.bundle.js",
+    "start": "http-server"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
